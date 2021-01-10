@@ -1,0 +1,24 @@
+{
+    "name": "fso-part3",
+    "version": "1.0.0",
+    "description": "Fullstack open part 3 exercises. Node backend.",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js",
+        "dev": "nodemon index.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/fiddesidde/fso3.git"
+    },
+    "author": "Fredrik Mellberg",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/fiddesidde/fso3/issues"
+    },
+    "homepage": "https://github.com/fiddesidde/fso3#readme",
+    "dependencies": {
+        "express": "^4.17.1"
+    }
+}
