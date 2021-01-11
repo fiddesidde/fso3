@@ -8,8 +8,8 @@ const Person = require('./models/person');
 
 const app = express();
 
-app.use(express.json());
 app.use(express.static('build'));
+app.use(express.json());
 app.use(
     morgan('tiny', {
         skip: (req, res) => req.method === 'POST',
@@ -39,7 +39,7 @@ app.get('/api/persons', async (req, res) => {
     res.json(persons);
 });
 
-app.post('/api/persons', async (req, res) => {
+app.post('/api/persons', async (req, res, next) => {
     try {
         const { name, number } = req.body;
         const sameNamePerson = await Person.find({ name: name });
@@ -60,12 +60,11 @@ app.post('/api/persons', async (req, res) => {
         await newPerson.save();
         res.json(newPerson);
     } catch (error) {
-        console.log(error);
-        res.status(500).end();
+        next(error);
     }
 });
 
-app.get('/api/persons/:id', async (req, res) => {
+app.get('/api/persons/:id', async (req, res, next) => {
     try {
         const { id } = req.params;
         const person = await Person.findById(id);
@@ -75,21 +74,53 @@ app.get('/api/persons/:id', async (req, res) => {
             res.status(404).end();
         }
     } catch (error) {
-        console.log(error);
-        res.status(400).send({ error: 'Incorrectly formatted id' });
+        next(error);
     }
 });
 
-app.delete('/api/persons/:id', async (req, res) => {
+app.delete('/api/persons/:id', async (req, res, next) => {
     try {
         const { id } = req.params;
         await Person.findByIdAndRemove(id);
         res.status(204).end();
     } catch (error) {
-        console.log(error);
-        res.status(500).end();
+        next(error);
     }
 });
+
+app.put('/api/persons/:id', async (req, res, next) => {
+    try {
+        const { name, number } = req.body;
+        const { id } = req.params;
+
+        const person = {
+            name,
+            number,
+        };
+
+        const updatedPerson = await Person.findByIdAndUpdate(id, person, {
+            new: true,
+        });
+        res.json(updatedPerson);
+    } catch (error) {
+        next(error);
+    }
+});
+
+const unknownEndpoint = (req, res) => {
+    res.status(404).send({ error: 'unknown endpoint' });
+};
+app.use(unknownEndpoint);
+
+const errorHandler = (error, req, res, next) => {
+    console.log(error.message);
+
+    if (error.name === 'CastError') {
+        return res.status(400).send({ error: 'Incorrectly formatted id' });
+    }
+    next(error);
+};
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
