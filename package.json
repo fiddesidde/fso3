@@ -24,6 +24,7 @@
     "homepage": "https://github.com/fiddesidde/fso3#readme",
     "dependencies": {
         "express": "^4.17.1",
+        "mongoose": "^5.11.11",
         "morgan": "^1.10.0"
     },
     "devDependencies": {
