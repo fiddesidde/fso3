@@ -42,17 +42,6 @@ app.get('/api/persons', async (req, res) => {
 app.post('/api/persons', async (req, res, next) => {
     try {
         const { name, number } = req.body;
-        const sameNamePerson = await Person.find({ name: name });
-
-        if (!name || !number) {
-            return res.status(400).json({ error: 'name/number is missing' });
-        }
-        if (sameNamePerson.length > 0) {
-            return res
-                .status(409)
-                .json({ error: 'Person with this name already exist' });
-        }
-
         const newPerson = new Person({
             name,
             number,
@@ -100,6 +89,8 @@ app.put('/api/persons/:id', async (req, res, next) => {
 
         const updatedPerson = await Person.findByIdAndUpdate(id, person, {
             new: true,
+            runValidators: true,
+            context: 'query',
         });
         res.json(updatedPerson);
     } catch (error) {
@@ -117,6 +108,8 @@ const errorHandler = (error, req, res, next) => {
 
     if (error.name === 'CastError') {
         return res.status(400).send({ error: 'Incorrectly formatted id' });
+    } else if (error.name === 'ValidationError') {
+        return res.status(400).json({ error: error.message });
     }
     next(error);
 };
