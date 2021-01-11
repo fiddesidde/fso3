@@ -39,7 +39,7 @@ const addPerson = async () => {
 };
 
 const logAllPersons = async () => {
-    persons = await Person.find({});
+    const persons = await Person.find({});
     console.log('Phonebook:');
     persons.forEach(person => {
         console.log(`${person.name} ${person.number}`);
