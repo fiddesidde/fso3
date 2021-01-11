@@ -1,6 +1,12 @@
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
+
 const express = require('express');
-const app = express();
 const morgan = require('morgan');
+const Person = require('./models/person');
+
+const app = express();
 
 app.use(express.json());
 app.use(express.static('build'));
@@ -19,77 +25,70 @@ app.use(
     )
 );
 
-let persons = [
-    {
-        name: 'Arto Hellas',
-        number: '040-123456',
-        id: 1,
-    },
-    {
-        name: 'Ada Lovelace',
-        number: '39-44-5323523',
-        id: 2,
-    },
-    {
-        name: 'Dan Abramov',
-        number: '12-43-234345',
-        id: 3,
-    },
-    {
-        name: 'Mary Poppendieck',
-        number: '39-23-6423122',
-        id: 4,
-    },
-];
-
 app.get('/', (req, res) => {
     res.redirect('/api/persons');
 });
 
-app.get('/info', (req, res) => {
+app.get('/info', async (req, res) => {
+    const persons = await Person.find({});
     res.send(`Phonebook has ${persons.length} entries <br> ${new Date()}`);
 });
 
-app.get('/api/persons', (req, res) => {
+app.get('/api/persons', async (req, res) => {
+    const persons = await Person.find({});
     res.json(persons);
 });
 
-app.post('/api/persons', (req, res) => {
-    const newId = Math.floor(Math.random() * 10000);
-    const { name, number } = req.body;
+app.post('/api/persons', async (req, res) => {
+    try {
+        const { name, number } = req.body;
+        const sameNamePerson = await Person.find({ name: name });
 
-    if (!name || !number) {
-        return res.status(400).json({ error: 'name/number is missing' });
-    }
-    if (persons.filter(person => person.name === name).length > 0) {
-        return res
-            .status(409)
-            .json({ error: 'Person with this name already exist' });
-    }
+        if (!name || !number) {
+            return res.status(400).json({ error: 'name/number is missing' });
+        }
+        if (sameNamePerson.length > 0) {
+            return res
+                .status(409)
+                .json({ error: 'Person with this name already exist' });
+        }
 
-    const newPerson = {
-        name: name,
-        number: number,
-        id: newId,
-    };
-    persons = persons.concat(newPerson);
-    res.json(newPerson);
-});
-
-app.get('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id);
-    const person = persons.find(person => person.id === id);
-    if (person) {
-        res.json(person);
-    } else {
-        res.status(404).end();
+        const newPerson = new Person({
+            name,
+            number,
+        });
+        await newPerson.save();
+        res.json(newPerson);
+    } catch (error) {
+        console.log(error);
+        res.status(500).end();
     }
 });
 
-app.delete('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id);
-    persons = persons.filter(person => person.id !== id);
-    res.status(204).end();
+app.get('/api/persons/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const person = await Person.findById(id);
+        if (person) {
+            res.json(person);
+        } else {
+            res.status(404).end();
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(400).send({ error: 'Incorrectly formatted id' });
+    }
+});
+
+app.delete('/api/persons/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await Person.findByIdAndRemove(id);
+        res.status(204).end();
+    } catch (error) {
+        console.log(error);
+        res.status(500).end();
+    }
 });
 
 const PORT = process.env.PORT || 8000;
