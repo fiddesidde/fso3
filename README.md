@@ -1,2 +1,2 @@
 Fullstack Open Phonebook app:
-https://blog.fremworks.com/
+https://phonebook.fremworks.com/
