@@ -1,14 +1,15 @@
-if (process.env.NODE_ENV !== 'production') {
+//if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
-}
+//}
 
 const express = require('express');
 const morgan = require('morgan');
+const path = require('path');
 const Person = require('./models/person');
 
 const app = express();
 
-app.use(express.static('build'));
+app.use(express.static(path.join(__dirname, 'build')));
 app.use(express.json());
 app.use(
     morgan('tiny', {
@@ -116,7 +117,7 @@ const errorHandler = (error, req, res, next) => {
 };
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on ${PORT}`);
 });
